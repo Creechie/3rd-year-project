@@ -242,3 +242,4 @@ ModelManifest.xml
 .fake/
 *.cache
 *.suo
+*.suo
