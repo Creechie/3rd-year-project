@@ -60,6 +60,8 @@ class MyDestructionListener : public b2DestructionListener {
 };
 
 //bool b2Fixture::RayCast(b2RayCastOutput* output, const b2RayCastInput& input, int32 childIndex);
+test;
+
 
 
 class CSensor {
