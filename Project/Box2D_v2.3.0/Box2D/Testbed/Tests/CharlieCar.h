@@ -59,16 +59,6 @@ class MyDestructionListener : public b2DestructionListener {
 	void SayGoodbye(b2Joint* joint) { }
 };
 
-//bool b2Fixture::RayCast(b2RayCastOutput* output, const b2RayCastInput& input, int32 childIndex);
-
-
-class CSensor {
-public:
-	
-
-};
-
-
 class CTire {
 public:
 	b2Body* m_body;
