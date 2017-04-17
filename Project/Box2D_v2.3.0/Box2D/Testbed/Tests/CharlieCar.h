@@ -9,7 +9,7 @@
 #include <set>
 
 // Enumerations for keyboard presses
-enum {
+enum keyPresses{
 	LEFT  = 0x1,		// == 0001
 	RIGHT = 0x2,		// == 0010
 	UP	  = 0x4,		// == 0100
