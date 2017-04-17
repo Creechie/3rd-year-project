@@ -61,6 +61,7 @@ class MyDestructionListener : public b2DestructionListener {
 
 //bool b2Fixture::RayCast(b2RayCastOutput* output, const b2RayCastInput& input, int32 childIndex);
 
+float currentRayAngle = 0;
 class CSensor {
 public:
 
@@ -402,6 +403,23 @@ public:
 
 		if (m_tire->m_hasCrashed)
 			m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
+
+
+
+		currentRayAngle += 360 / 20.0 / 60.0 * DEGTORAD;	// One revolution every 20 seconds
+
+		// Calculate points of ray
+		float rayLength = 25;
+		b2Vec2 p1(0, 20);
+		b2Vec2 p2 = p1 + rayLength * b2Vec2(sinf(currentRayAngle), cosf(currentRayAngle));
+
+		// Draw line
+		glColor3f(1, 1, 1);
+		glBegin(GL_LINES);
+		glVertex2f(p1.x, p1.y);
+		glVertex2f(p2.x, p2.y);
+		glEnd();
+
 
 		// Run the default physics and rendering
 		Test::Step(settings);
