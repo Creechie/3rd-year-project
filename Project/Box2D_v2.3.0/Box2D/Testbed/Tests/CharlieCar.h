@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef CHARLIE_CAR_H
 #define CHARLIE_CAR_H
 
