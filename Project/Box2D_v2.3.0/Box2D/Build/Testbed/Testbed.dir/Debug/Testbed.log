@@ -1,10 +1,4 @@
-﻿  Building Custom Rule H:/Charlie/Documents/My Stuff/University Stuff/Year 3/PRCO304/3rd-year-project/Project/Box2D_v2.3.0/Box2D/Testbed/CMakeLists.txt
-  CMake does not need to re-run because H:/Charlie/Documents/My Stuff/University Stuff/Year 3/PRCO304/3rd-year-project/Project/Box2D_v2.3.0/Box2D/Build/Testbed/CMakeFiles/generate.stamp is up-to-date.
-  Main.cpp
-  Render.cpp
-  Test.cpp
-  TestEntries.cpp
+﻿  TestEntries.cpp
 h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(215): warning C4305: 'argument': truncation from 'double' to 'float32'
 h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(218): warning C4305: 'argument': truncation from 'double' to 'float32'
-  Generating Code...
   Testbed.vcxproj -> H:\Charlie\Documents\My Stuff\University Stuff\Year 3\PRCO304\3rd-year-project\Project\Box2D_v2.3.0\Box2D\Build\Testbed\Debug\Testbed.exe

@@ -295,6 +295,9 @@ public:
 
 
 	}
+
+	std::vector<CTire*> getTires(){ return m_tires; }
+
 };
 
 
@@ -316,7 +319,7 @@ public:
 
 		m_keyboardState = 0;
 
-		m_tire = new CTire(m_world);
+		//m_tire = new CTire(m_world);
 		m_car  = new  CCar(m_world);
 
 
@@ -401,11 +404,13 @@ public:
 		//m_tire->updateDrive(m_keyboardState);
 		//m_tire->updateTurn(m_keyboardState);
 
-		if (m_tire->m_hasCrashed)
-			m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
+		std::vector<CTire*> tires = m_car->getTires();
+		for (int i = 0; i <= 3; i++)
+			if (tires[i]->m_hasCrashed)
+				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
+		
 
-
-
+		
 		currentRayAngle += 360 / 20.0 / 60.0 * DEGTORAD;	// One revolution every 20 seconds
 
 		// Calculate points of ray
@@ -431,8 +436,8 @@ public:
 	}
 
 	~CharlieCar() {
-		delete m_tire;
-		delete m_car;
+		if (m_tire) delete m_tire;
+		if (m_car)	delete m_car;
 
 		m_world->DestroyBody(m_groundBody);
 	}
