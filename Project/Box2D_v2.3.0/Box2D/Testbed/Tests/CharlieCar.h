@@ -59,15 +59,6 @@ class MyDestructionListener : public b2DestructionListener {
 	void SayGoodbye(b2Joint* joint) { }
 };
 
-//bool b2Fixture::RayCast(b2RayCastOutput* output, const b2RayCastInput& input, int32 childIndex);
-
-float currentRayAngle = 0;
-class CSensor {
-public:
-
-
-};
-
 class CTire {
 public:
 	b2Body* m_body;
@@ -308,7 +299,8 @@ public:
 /// Test bed class
 class CharlieCar : public Test {
 	CCar  *m_car;
-	b2Vec2 m_sensorPoints[5];
+	b2Vec2 m_feelerOrigins[5];	 // Where the feelers come out of the car
+	float  m_feelerFractions[5]; // Contains each feeler's intersection fraction
 
 	int m_keyboardState;
 
@@ -393,20 +385,20 @@ public:
 	}
 
 
-	/// Update the points of the raycast sensors according to the m_car's position
-	void updateSensorPoints() {
-		m_sensorPoints[0] = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0));
-		m_sensorPoints[1] = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0, 2.8 ));
-		m_sensorPoints[2] = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0, 2.8 ));
-		m_sensorPoints[3] = m_car->getBody()->GetWorldPoint(b2Vec2( 2.8, 5.5 ));
-		m_sensorPoints[4] = m_car->getBody()->GetWorldPoint(b2Vec2(-2.8, 5.5 ));
+	/// Update the points of the feelers according to the m_car's position
+	void updateFeelerOrigins() {
+		m_feelerOrigins[0] = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0));
+		m_feelerOrigins[1] = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0, 2.8 ));
+		m_feelerOrigins[2] = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0, 2.8 ));
+		m_feelerOrigins[3] = m_car->getBody()->GetWorldPoint(b2Vec2( 2.8, 5.5 ));
+		m_feelerOrigins[4] = m_car->getBody()->GetWorldPoint(b2Vec2(-2.8, 5.5 ));
 	}
 
 
-	/// Calculates the ending point (p2) of one of m_car's raycast sensors
-	b2Vec2 calculateP2(int sensorIndex, b2Vec2 p1, float rayLength) {
+	/// Calculates the ending point (p2) of one of m_car's feelers
+	b2Vec2 calculateP2(int feelerIndex, b2Vec2 p1, float rayLength) {
 		b2Vec2 p2;
-		switch (sensorIndex) {
+		switch (feelerIndex) {
 		case 0:
 			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0 + rayLength));
 			return p2;
@@ -426,17 +418,17 @@ public:
 	}
 
 
-	/// Handles m_car's raycast sensors
-	void handleRaycastSensors() {
+	/// Creates 5 raycasts coming from m_car that act as feelers
+	void handleFeelers() {
 
-		updateSensorPoints();
+		updateFeelerOrigins();
 
-		// Create 5 raycast sensors
+		// Create 5 raycast feelers
 		for (int i = 0; i < 5; i++) {
 
 			// Calculate points of ray
-			float rayLength = 25;
-			b2Vec2 p1 = m_sensorPoints[i];
+			float rayLength = 25;						// Length of feelers
+			b2Vec2 p1 = m_feelerOrigins[i];
 			b2Vec2 p2 = calculateP2(i, p1, rayLength);
 
 			// Set up input
@@ -446,23 +438,21 @@ public:
 			input.maxFraction = 1;
 
 			// Check every fixture of every body to find closest
-			float closestFraction = 1; // Initialise with the end of the ray (p2)
+			m_feelerFractions[i] = 1.0; // Initialise with the end of the ray (p2)
 
-			b2Vec2 intersectionNormal(0, 0);
 			for (b2Body* b = m_world->GetBodyList(); b; b = b->GetNext()) {
 				for (b2Fixture* f = b->GetFixtureList(); f; f = f->GetNext()) {
 
+					// If the current fraction is less than the current closest fraction - make that the new closest fraction
 					b2RayCastOutput output;
 					if (!f->RayCast(&output, input, 0))
 						continue;
-					if (output.fraction < closestFraction) {
-						closestFraction = output.fraction;
-						intersectionNormal = output.normal;
-					}
+					if (output.fraction < m_feelerFractions[i])
+						m_feelerFractions[i] = output.fraction;
 				}
 			}
 
-			b2Vec2 intersectionPoint = p1 + closestFraction * (p2 - p1);
+			b2Vec2 intersectionPoint = p1 + m_feelerFractions[i] * (p2 - p1);
 
 			// Draw ray
 			glColor3f(1, 1, 1);
@@ -483,7 +473,15 @@ public:
 	void Step(Settings* settings) {
 
 		m_car->update(m_keyboardState);
-		handleRaycastSensors();
+		handleFeelers();
+		
+		// Draw feeler values on screen
+		for (int i = 0; i < 5; i++) {
+			m_debugDraw.DrawString(5, m_textLine,
+				"Feeler [1]: %.2f", m_feelerFractions[i]);
+			m_textLine += 15;
+		}
+		m_textLine += 15;
 
 		// Crash if any tire touches a sensor wall
 		std::vector<CTire*> tires = m_car->getTires();
@@ -491,7 +489,6 @@ public:
 			if (tires[i]->m_hasCrashed)
 				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
 		
-
 		
 
 
