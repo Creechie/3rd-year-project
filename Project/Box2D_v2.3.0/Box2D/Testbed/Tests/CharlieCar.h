@@ -302,6 +302,8 @@ class CharlieCar : public Test {
 	b2Vec2 m_feelerOrigins[5];	 // Where the feelers come out of the car
 	float  m_feelerFractions[5]; // Contains each feeler's intersection fraction
 
+
+
 	int m_keyboardState;
 
 	MyDestructionListener m_destructionListener;
@@ -315,24 +317,120 @@ public:
 
 		m_keyboardState = 0;
 
-		m_car  = new CCar(m_world);
+		m_car = new CCar(m_world);
+
+		// Create track
+		b2BodyDef bd;
+		b2Body* walls = m_world->CreateBody(&bd);
+
+		float trackSize = 30;
+
+		// Create inner walls
+		{
+			// Set up inner wall shape vertices
+			b2Vec2 vertices[20];
+			vertices[0].Set(0, 0);
+			vertices[1].Set(1.5, 0);
+			vertices[2].Set(1.5, 1);
+			vertices[3].Set(0.5, 1);
+			vertices[4].Set(0.5, 3);
+			vertices[5].Set(-0.5, 3);
+			vertices[6].Set(-0.5, 2);
+			vertices[7].Set(-2.5, 2);
+			vertices[8].Set(-2.5, 3);
+			vertices[9].Set(-3.5, 3);
+			vertices[10].Set(-3.5, 2);
+			vertices[11].Set(-5.5, 2);
+			vertices[12].Set(-5.5, 1.5);
+			vertices[13].Set(-6.5, 1);
+			vertices[14].Set(-6.5, -0.5);
+			vertices[15].Set(-5.5, -1.5);
+			vertices[16].Set(-3.5, -1.5);
+			vertices[17].Set(-2.5, 0.5);
+			vertices[18].Set(-0.5, 0.5);
+			vertices[19].Set(-5.5, 3);
+				
+			// Multiply vertices by trackSize
+			for (int i = 0; i < 20; i++) {
+				vertices[i] *= trackSize;
+			}
+
+			// Link all vertices to form wall
+			b2Fixture* fixture;
+			b2EdgeShape shape;
+			for (int i = 0; i < 18; i++) {
+				shape.Set(vertices[i], vertices[i + 1]);
+				fixture = walls->CreateFixture(&shape, 10.0f);
+			}
+			shape.Set(vertices[11], vertices[19]);
+			fixture = walls->CreateFixture(&shape, 10.0f);
+			shape.Set(vertices[18], vertices[0]);
+			fixture = walls->CreateFixture(&shape, 10.0f);
+		}
+
+		// Create outer walls
+		{
+			// Set up outer wall shape vertices
+			b2Vec2 vertices[17];
+			vertices[0].Set(2.5, -1);
+			vertices[1].Set(2.5, 2);
+			vertices[2].Set(1.5, 2);
+			vertices[3].Set(1.5, 4);
+			vertices[4].Set(-6.5, 4);
+			vertices[5].Set(-6.5, 2.5);
+			vertices[6].Set(-7.5, 2);
+			vertices[7].Set(-7.5, -1);
+			vertices[8].Set(-6, -2.5);
+			vertices[9].Set(-3, -2.5);
+			vertices[10].Set(-2, -0.5);
+			vertices[11].Set(-1, -0.5);
+			vertices[12].Set(-0.5, -1);
+			vertices[13].Set(-1.5, 4);
+			vertices[14].Set(-1.5, 3);
+			vertices[15].Set(-4.5, 4);
+			vertices[16].Set(-4.5, 3);
+
+			// Multiply vertices by trackSize
+			for (int i = 0; i < 17; i++) {
+				vertices[i] *= trackSize;
+			}
+
+			// Link all vertices to form wall
+			b2Fixture* fixture;
+			b2EdgeShape shape;
+			for (int i = 0; i < 12; i++) {
+				shape.Set(vertices[i], vertices[i + 1]);
+				fixture = walls->CreateFixture(&shape, 10.0f);
+			}
+			shape.Set(vertices[13], vertices[14]);
+			fixture = walls->CreateFixture(&shape, 10.0f);
+			shape.Set(vertices[15], vertices[16]);
+			fixture = walls->CreateFixture(&shape, 10.0f);
+			shape.Set(vertices[12], vertices[0]);
+			fixture = walls->CreateFixture(&shape, 10.0f);
+		}
+
+		// Move track into position
+		walls->SetTransform(b2Vec2(-15, 1), 90 * DEGTORAD);
 
 
-		b2BodyDef bodyDef;
-		m_groundBody = m_world->CreateBody(&bodyDef);
 
-		b2PolygonShape polygonShape;
-		b2FixtureDef fixtureDef;
-		fixtureDef.shape = &polygonShape;
-		fixtureDef.isSensor = true;
+		//// Temp walls
+		//b2BodyDef bodyDef;
+		//m_groundBody = m_world->CreateBody(&bodyDef);
 
-		polygonShape.SetAsBox(9, 7, b2Vec2(-10, 35), 20 * DEGTORAD);
-		b2Fixture* wallFixture = m_groundBody->CreateFixture(&fixtureDef);
-		wallFixture->SetUserData(new WallFUD(true));
+		//b2PolygonShape polygonShape;
+		//b2FixtureDef fixtureDef;
+		//fixtureDef.shape = &polygonShape;
+		//fixtureDef.isSensor = true;
 
-		polygonShape.SetAsBox(9, 5, b2Vec2(20, 40), -40 * DEGTORAD);
-		wallFixture = m_groundBody->CreateFixture(&fixtureDef);
-		wallFixture->SetUserData(new WallFUD(true));
+		//polygonShape.SetAsBox(9, 7, b2Vec2(-10, 35), 20 * DEGTORAD);
+		//b2Fixture* wallFixture = m_groundBody->CreateFixture(&fixtureDef);
+		//wallFixture->SetUserData(new WallFUD(true));
+
+		//polygonShape.SetAsBox(9, 5, b2Vec2(20, 40), -40 * DEGTORAD);
+		//wallFixture = m_groundBody->CreateFixture(&fixtureDef);
+		//wallFixture->SetUserData(new WallFUD(true));
 
 	}
 
@@ -388,10 +486,10 @@ public:
 	/// Update the points of the feelers according to the m_car's position
 	void updateFeelerOrigins() {
 		m_feelerOrigins[0] = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0));
-		m_feelerOrigins[1] = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0, 2.8 ));
-		m_feelerOrigins[2] = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0, 2.8 ));
-		m_feelerOrigins[3] = m_car->getBody()->GetWorldPoint(b2Vec2( 2.8, 5.5 ));
-		m_feelerOrigins[4] = m_car->getBody()->GetWorldPoint(b2Vec2(-2.8, 5.5 ));
+		m_feelerOrigins[1] = m_car->getBody()->GetWorldPoint(b2Vec2( 2.8, 5.5 ));
+		m_feelerOrigins[2] = m_car->getBody()->GetWorldPoint(b2Vec2(-2.8, 5.5 ));
+		m_feelerOrigins[3] = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0, 2.8 ));
+		m_feelerOrigins[4] = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0, 2.8 ));
 	}
 
 
@@ -400,20 +498,22 @@ public:
 		b2Vec2 p2;
 		switch (feelerIndex) {
 		case 0:
+			// Might need to make this one longer than the others
 			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0 + rayLength));
 			return p2;
 		case 1:
-			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0 + rayLength, 2.8));
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(9.0 + rayLength / 2, 9.0 + rayLength / 2));
 			return p2;
 		case 2:
-			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0 - rayLength, 2.8));
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-9.0 - rayLength / 2, 9.0 + rayLength / 2));
 			return p2;
 		case 3:
-			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 9.0 + rayLength/2, 9.0 + rayLength/2));
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(3.0 + rayLength, 2.8));
 			return p2;
 		case 4:
-			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-9.0 - rayLength/2, 9.0 + rayLength/2));
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0 - rayLength, 2.8));
 			return p2;
+			
 		}
 	}
 
@@ -427,7 +527,7 @@ public:
 		for (int i = 0; i < 5; i++) {
 
 			// Calculate points of ray
-			float rayLength = 25;						// Length of feelers
+			float rayLength = 50;						// Length of feelers
 			b2Vec2 p1 = m_feelerOrigins[i];
 			b2Vec2 p2 = calculateP2(i, p1, rayLength);
 
@@ -455,7 +555,7 @@ public:
 			b2Vec2 intersectionPoint = p1 + m_feelerFractions[i] * (p2 - p1);
 
 			// Draw ray
-			glColor3f(1, 1, 1);
+			glColor3f(1, 1, 0.5);
 			glBegin(GL_LINES);
 			glVertex2f(p1.x, p1.y);
 			glVertex2f(intersectionPoint.x, intersectionPoint.y);
@@ -469,27 +569,29 @@ public:
 		}
 	}
 
+	void drawInfo() {
+		// Draw feeler values on screen
+		for (int i = 0; i < 5; i++) {
+			m_debugDraw.DrawString(5, m_textLine,
+				"Feeler [%i]: %.2f", i, m_feelerFractions[i]);
+			m_textLine += 15;
+		}
+		m_textLine += 15;
+
+		// Display crash message if crashed
+		std::vector<CTire*> tires = m_car->getTires();
+		for (int i = 0; i <= 3; i++)
+			if (tires[i]->m_hasCrashed)
+				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
+		m_textLine += 30;
+	}
+
 
 	void Step(Settings* settings) {
 
 		m_car->update(m_keyboardState);
 		handleFeelers();
-		
-		// Draw feeler values on screen
-		for (int i = 0; i < 5; i++) {
-			m_debugDraw.DrawString(5, m_textLine,
-				"Feeler [1]: %.2f", m_feelerFractions[i]);
-			m_textLine += 15;
-		}
-		m_textLine += 15;
-
-		// Crash if any tire touches a sensor wall
-		std::vector<CTire*> tires = m_car->getTires();
-		for (int i = 0; i <= 3; i++)
-			if (tires[i]->m_hasCrashed)
-				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
-		
-		
+		drawInfo();
 
 
 		// Run the default physics and rendering

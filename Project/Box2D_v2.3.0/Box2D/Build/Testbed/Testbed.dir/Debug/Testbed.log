@@ -1,16 +1,16 @@
 ﻿  TestEntries.cpp
 h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(207): warning C4305: 'argument': truncation from 'double' to 'float32'
 h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(210): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(391): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(392): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(393): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(394): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(403): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(406): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(406): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(409): warning C4305: 'argument': truncation from 'double' to 'float32'
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(409): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(412): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(415): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
-h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\charliecar.h(418): warning C4715: 'CharlieCar::calculateP2': not all control paths return a value
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(489): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(490): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(491): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(492): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(502): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(505): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(508): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(511): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(511): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(514): warning C4305: 'argument': truncation from 'double' to 'float32'
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\CharlieCar.h(514): warning C4244: 'argument': conversion from 'double' to 'float32', possible loss of data
+h:\charlie\documents\my stuff\university stuff\year 3\prco304\3rd-year-project\project\box2d_v2.3.0\box2d\testbed\tests\charliecar.h(518): warning C4715: 'CharlieCar::calculateP2': not all control paths return a value
   Testbed.vcxproj -> H:\Charlie\Documents\My Stuff\University Stuff\Year 3\PRCO304\3rd-year-project\Project\Box2D_v2.3.0\Box2D\Build\Testbed\Debug\Testbed.exe
