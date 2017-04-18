@@ -202,6 +202,7 @@ class CCar {
 
 	std::vector<CTire*> m_tires;
 	b2RevoluteJoint *flJoint, *frJoint;
+
 public:
 	CCar(b2World* world) {
 		// Create the car body
@@ -210,14 +211,15 @@ public:
 		m_body = world->CreateBody(&bd);
 
 		b2Vec2 vertices[8];
-		vertices[0].Set(1.5, 0.0);
-		vertices[1].Set(3.0, 2.5);
-		vertices[2].Set(2.8, 5.5);
-		vertices[3].Set(1.0, 10.0);
+		vertices[0].Set( 1.5, 0.0 );
+		vertices[1].Set( 3.0, 2.5 );
+		vertices[2].Set( 2.8, 5.5 );
+		vertices[3].Set( 1.0, 10.0);
 		vertices[4].Set(-1.0, 10.0);
-		vertices[5].Set(-2.8, 5.5);
-		vertices[6].Set(-3.0, 2.5);
-		vertices[7].Set(-1.5, 0.0);
+		vertices[5].Set(-2.8, 5.5 );
+		vertices[6].Set(-3.0, 2.5 );
+		vertices[7].Set(-1.5, 0.0 );
+
 
 		b2PolygonShape ps;
 		ps.Set(vertices, 8);
@@ -296,15 +298,17 @@ public:
 
 	}
 
-	std::vector<CTire*> getTires(){ return m_tires; }
+	// Getters
+	std::vector<CTire*>	getTires() { return m_tires; }
+	b2Body* getBody() { return m_body; }
 
 };
 
 
 /// Test bed class
 class CharlieCar : public Test {
-	CTire *m_tire;
 	CCar  *m_car;
+	b2Vec2 m_sensorPoints[5];
 
 	int m_keyboardState;
 
@@ -319,8 +323,7 @@ public:
 
 		m_keyboardState = 0;
 
-		//m_tire = new CTire(m_world);
-		m_car  = new  CCar(m_world);
+		m_car  = new CCar(m_world);
 
 
 		b2BodyDef bodyDef;
@@ -331,11 +334,11 @@ public:
 		fixtureDef.shape = &polygonShape;
 		fixtureDef.isSensor = true;
 
-		polygonShape.SetAsBox(9, 7, b2Vec2(-10, 15), 20 * DEGTORAD);
+		polygonShape.SetAsBox(9, 7, b2Vec2(-10, 35), 20 * DEGTORAD);
 		b2Fixture* wallFixture = m_groundBody->CreateFixture(&fixtureDef);
 		wallFixture->SetUserData(new WallFUD(true));
 
-		polygonShape.SetAsBox(9, 5, b2Vec2(5, 20), -40 * DEGTORAD);
+		polygonShape.SetAsBox(9, 5, b2Vec2(20, 40), -40 * DEGTORAD);
 		wallFixture = m_groundBody->CreateFixture(&fixtureDef);
 		wallFixture->SetUserData(new WallFUD(true));
 
@@ -373,12 +376,6 @@ public:
 			return;
 
 		tire_vs_wall(a, b, began);
-
-		/*if		(fudA->getType() == FUD_CAR_TIRE && fudB->getType() == FUD_WALL)
-			tire_vs_wall(a, b, began);
-		else if (fudA->getType() == FUD_WALL && fudB->getType() == FUD_CAR_TIRE)
-			tire_vs_wall(b, a, began);*/
-
 	}
 
 	void BeginContact(b2Contact* contact) { handleContact(contact, true ); }
@@ -396,14 +393,99 @@ public:
 	}
 
 
+	/// Update the points of the raycast sensors according to the m_car's position
+	void updateSensorPoints() {
+		m_sensorPoints[0] = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0));
+		m_sensorPoints[1] = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0, 2.8 ));
+		m_sensorPoints[2] = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0, 2.8 ));
+		m_sensorPoints[3] = m_car->getBody()->GetWorldPoint(b2Vec2( 2.8, 5.5 ));
+		m_sensorPoints[4] = m_car->getBody()->GetWorldPoint(b2Vec2(-2.8, 5.5 ));
+	}
+
+
+	/// Calculates the ending point (p2) of one of m_car's raycast sensors
+	b2Vec2 calculateP2(int sensorIndex, b2Vec2 p1, float rayLength) {
+		b2Vec2 p2;
+		switch (sensorIndex) {
+		case 0:
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 0.0, 10.0 + rayLength));
+			return p2;
+		case 1:
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 3.0 + rayLength, 2.8));
+			return p2;
+		case 2:
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-3.0 - rayLength, 2.8));
+			return p2;
+		case 3:
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2( 9.0 + rayLength/2, 9.0 + rayLength/2));
+			return p2;
+		case 4:
+			p2 = m_car->getBody()->GetWorldPoint(b2Vec2(-9.0 - rayLength/2, 9.0 + rayLength/2));
+			return p2;
+		}
+	}
+
+
+	/// Handles m_car's raycast sensors
+	void handleRaycastSensors() {
+
+		updateSensorPoints();
+
+		// Create 5 raycast sensors
+		for (int i = 0; i < 5; i++) {
+
+			// Calculate points of ray
+			float rayLength = 25;
+			b2Vec2 p1 = m_sensorPoints[i];
+			b2Vec2 p2 = calculateP2(i, p1, rayLength);
+
+			// Set up input
+			b2RayCastInput input;
+			input.p1 = p1;
+			input.p2 = p2;
+			input.maxFraction = 1;
+
+			// Check every fixture of every body to find closest
+			float closestFraction = 1; // Initialise with the end of the ray (p2)
+
+			b2Vec2 intersectionNormal(0, 0);
+			for (b2Body* b = m_world->GetBodyList(); b; b = b->GetNext()) {
+				for (b2Fixture* f = b->GetFixtureList(); f; f = f->GetNext()) {
+
+					b2RayCastOutput output;
+					if (!f->RayCast(&output, input, 0))
+						continue;
+					if (output.fraction < closestFraction) {
+						closestFraction = output.fraction;
+						intersectionNormal = output.normal;
+					}
+				}
+			}
+
+			b2Vec2 intersectionPoint = p1 + closestFraction * (p2 - p1);
+
+			// Draw ray
+			glColor3f(1, 1, 1);
+			glBegin(GL_LINES);
+			glVertex2f(p1.x, p1.y);
+			glVertex2f(intersectionPoint.x, intersectionPoint.y);
+			glEnd();
+
+			// Draw intersection point
+			glPointSize(5);
+			glBegin(GL_POINTS);
+			glVertex2f(intersectionPoint.x, intersectionPoint.y);
+			glEnd();
+		}
+	}
+
+
 	void Step(Settings* settings) {
 
 		m_car->update(m_keyboardState);
-		
-		//m_tire->updateFriction();
-		//m_tire->updateDrive(m_keyboardState);
-		//m_tire->updateTurn(m_keyboardState);
+		handleRaycastSensors();
 
+		// Crash if any tire touches a sensor wall
 		std::vector<CTire*> tires = m_car->getTires();
 		for (int i = 0; i <= 3; i++)
 			if (tires[i]->m_hasCrashed)
@@ -411,19 +493,6 @@ public:
 		
 
 		
-		currentRayAngle += 360 / 20.0 / 60.0 * DEGTORAD;	// One revolution every 20 seconds
-
-		// Calculate points of ray
-		float rayLength = 25;
-		b2Vec2 p1(0, 20);
-		b2Vec2 p2 = p1 + rayLength * b2Vec2(sinf(currentRayAngle), cosf(currentRayAngle));
-
-		// Draw line
-		glColor3f(1, 1, 1);
-		glBegin(GL_LINES);
-		glVertex2f(p1.x, p1.y);
-		glVertex2f(p2.x, p2.y);
-		glEnd();
 
 
 		// Run the default physics and rendering
@@ -436,7 +505,6 @@ public:
 	}
 
 	~CharlieCar() {
-		if (m_tire) delete m_tire;
 		if (m_car)	delete m_car;
 
 		m_world->DestroyBody(m_groundBody);
