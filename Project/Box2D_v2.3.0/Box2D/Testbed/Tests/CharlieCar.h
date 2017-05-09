@@ -16,11 +16,13 @@ using namespace std;
 // Enumerations for keyboard presses
 // Using bit-flags to learn new skills (e.g. bitwise operators)
 enum keyPresses{
-	LEFT   = 0x01,		// == 0000 0001
-	RIGHT  = 0x02,		// == 0000 0010
-	UP	   = 0x04,		// == 0000 0100
+	UP     = 0x01,		// == 0000 0001
+	LEFT   = 0x02,		// == 0000 0010
+	RIGHT  = 0x04,		// == 0000 0100
 	DOWN   = 0x08,		// == 0000 1000
-	RECORD = 0x10		// == 0001 0000
+	RECORD = 0x10,		// == 0001 0000
+	AUTO   = 0x20		// == 0010 0000
+
 };
 
 
@@ -309,9 +311,8 @@ class CharlieCar : public Test {
 	b2Vec2 m_feelerOrigins[5];	 // Where the feelers come out of the car
 	float  m_feelerFractions[5]; // Contains each feeler's intersection fraction
 
-
-
-	int m_keyboardState;
+	int  m_keyboardState;
+	bool m_autoMode;
 
 	MyDestructionListener m_destructionListener;
 
@@ -323,6 +324,7 @@ public:
 		m_world->SetGravity(b2Vec2(0, 0));
 
 		m_keyboardState = 0;
+		m_autoMode = false;
 
 		m_car = new CCar(m_world);
 
@@ -423,24 +425,47 @@ public:
 	}
 
 
+	// Toggles autoMode when the AUTO key is pressed
+	void toggleAutoMode(int oldKeyState, int currentKeyState) {
+
+		// If AUTO key is pressed...
+		if (((oldKeyState & AUTO) == 0) && ((currentKeyState & AUTO) > 0) ) {
+
+			// Toggle auto mode
+			(m_autoMode == false) ? m_autoMode = true : m_autoMode = false;	
+			// Reset step counter
+			m_stepCount = 1;	
+		} 
+	}
+
+
+	// Called on key press
 	void Keyboard(unsigned char key) {
+		int oldState = m_keyboardState;
+
 		switch (key) {
 		case 'w': m_keyboardState |= UP;     break;
 		case 'a': m_keyboardState |= LEFT;   break;
 		case 's': m_keyboardState |= DOWN;   break;
 		case 'd': m_keyboardState |= RIGHT;  break;
-		case 'o': m_keyboardState |= RECORD; break;
+		case 'i': m_keyboardState |= RECORD; break;
+		case 'o': m_keyboardState |= AUTO;	 break;
 
 		default : Test::Keyboard(key);
 		}
+		toggleAutoMode(oldState, m_keyboardState);
+
+		
 	}
+	// Called on key release
 	void KeyboardUp(unsigned char key) {
 		switch (key) {
 		case 'w': m_keyboardState &= ~UP;     break;
 		case 'a': m_keyboardState &= ~LEFT;   break;
 		case 's': m_keyboardState &= ~DOWN;   break;
 		case 'd': m_keyboardState &= ~RIGHT;  break;
-		case 'o': m_keyboardState &= ~RECORD; break;
+		case 'i': m_keyboardState &= ~RECORD; break;
+		case 'o': m_keyboardState &= ~AUTO;	  break;
 
 		default : Test::Keyboard(key);
 		}
@@ -575,22 +600,29 @@ public:
 		}
 		m_textLine += 15;
 
+		// Display message when auto mode is active
+		if (m_keyboardState & RECORD) {
+			m_debugDraw.DrawString(5, m_textLine, "RECORDING");
+			m_textLine += 15;
+		}
+
+		// Display message when recording data
+		if (m_autoMode) {
+			m_debugDraw.DrawString(5, m_textLine, "AUTONOMOUS MODE");
+			m_textLine += 15;
+		}
+
 		// Display crash message if crashed
 		vector<CTire*> tires = m_car->getTires();
 		for (int i = 0; i <= 3; i++)
 			if (tires[i]->m_hasCrashed)
-				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
+				m_debugDraw.DrawString(5, m_textLine, "You crashed");
 		m_textLine += 30;
 	}
 
 
 	// Records input and target training data to .csv files.
 	void recordData(int keyboardState) {
-
-		// Draw "RECORDING" text
-		m_textLine += 15;
-		m_debugDraw.DrawString(5, m_textLine, "RECORDING");
-		m_textLine += 15;
 
 		ofstream dataStream;
 
@@ -606,28 +638,13 @@ public:
 		// Write training targets (key states)
 		dataStream.open("trainingTargets.csv", ios::app);
 
-		if (keyboardState & UP)
-			dataStream << "1";
-		else
-			dataStream << "0";
+		(keyboardState & UP)    ? dataStream << "1" : dataStream << "0";
 		dataStream << ",";
-
-		if (keyboardState & LEFT)
-			dataStream << "1";
-		else
-			dataStream << "0";
+		(keyboardState & LEFT)  ? dataStream << "1" : dataStream << "0";
 		dataStream << ",";
-
-		if (keyboardState & RIGHT)
-			dataStream << "1";
-		else
-			dataStream << "0";
+		(keyboardState & RIGHT) ? dataStream << "1" : dataStream << "0";
 		dataStream << ",";
-
-		if (keyboardState & DOWN)
-			dataStream << "1";
-		else
-			dataStream << "0";
+		(keyboardState & DOWN)  ? dataStream << "1" : dataStream << "0";
 		dataStream << ",";
 
 		dataStream << "\n";
@@ -656,10 +673,11 @@ public:
 					getline(file, s);
 				}
 
-				// get the desired line
+				// Get the desired line
 				getline(file, s);
 			}		
 		}
+		if (s == "") s = "0,0,0,0";
 		return s;
 	}
 
@@ -670,23 +688,19 @@ public:
 		
 		// Get line containing key states in string form
 		string fileString;
-		fileString = readLine("trainingTargets2.csv", step);
+		fileString = readLine("trainingTargets.csv", step);
 
 		// Convert string into keyboardState
-		string u, l, r, d;  // substrings for each key state (up, left, right, down)
+		char u, l, r, d;  // substrings for each key state (up, left, right, down)
 		u = fileString.at(0);
 		l = fileString.at(2);
 		r = fileString.at(4);
 		d = fileString.at(6);
 
-		if (u == "1")
-			keyboardState |= UP;
-		if (l == "1")
-			keyboardState |= LEFT;
-		if (r == "1")
-			keyboardState |= RIGHT;
-		if (d == "1")
-			keyboardState |= DOWN;
+		if (u == '1') keyboardState |= UP;
+		if (l == '1') keyboardState |= LEFT;
+		if (r == '1') keyboardState |= RIGHT;
+		if (d == '1') keyboardState |= DOWN;
 
 		return keyboardState;
 	}
@@ -694,29 +708,18 @@ public:
 
 	void Step(Settings* settings) {
 
-		m_keyboardState = getKeyboardStateFromFile(m_stepCount);
-
-		// if in automatic mode
-		// while (1) {
-		// step++
-		// getKeyboardStateFromFile(m_stepCount)
+		if (m_autoMode == true)
+			m_keyboardState = getKeyboardStateFromFile(m_stepCount);
 
 		m_car->update(m_keyboardState);
-
 		handleFeelers();
 		drawInfo();
-		
+
 		if (m_keyboardState & RECORD)
 			recordData(m_keyboardState);
 
-
-		//readLine("trainingInputs.csv", 26);
-
-
-
 		// Run the default physics and rendering
 		Test::Step(settings);
-
 	}
 
 
