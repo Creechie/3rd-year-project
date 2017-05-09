@@ -7,13 +7,20 @@
 
 #include <vector>
 #include <set>
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
 
 // Enumerations for keyboard presses
+// Using bit-flags to learn new skills (e.g. bitwise operators)
 enum keyPresses{
-	LEFT  = 0x1,		// == 0001
-	RIGHT = 0x2,		// == 0010
-	UP	  = 0x4,		// == 0100
-	DOWN  = 0x8			// == 1000
+	LEFT   = 0x01,		// == 0000 0001
+	RIGHT  = 0x02,		// == 0000 0010
+	UP	   = 0x04,		// == 0000 0100
+	DOWN   = 0x08,		// == 0000 1000
+	RECORD = 0x10		// == 0001 0000
 };
 
 
@@ -67,7 +74,7 @@ public:
 	float m_maxBackwardSpeed = -40.0f;
 	float m_maxDriveForce    = 300.0f;
 
-	std::set<WallFUD*> m_wall;
+	set<WallFUD*> m_wall;
 	bool m_hasCrashed;
 
 
@@ -191,7 +198,7 @@ public:
 class CCar {
 	b2Body* m_body;
 
-	std::vector<CTire*> m_tires;
+	vector<CTire*> m_tires;
 	b2RevoluteJoint *flJoint, *frJoint;
 
 public:
@@ -290,7 +297,7 @@ public:
 	}
 
 	// Getters
-	std::vector<CTire*>	getTires() { return m_tires; }
+	vector<CTire*>	getTires() { return m_tires; }
 	b2Body* getBody() { return m_body; }
 
 };
@@ -413,43 +420,28 @@ public:
 		// Move track into position
 		walls->SetTransform(b2Vec2(-15, 1), 90 * DEGTORAD);
 
-
-
-		//// Temp walls
-		//b2BodyDef bodyDef;
-		//m_groundBody = m_world->CreateBody(&bodyDef);
-
-		//b2PolygonShape polygonShape;
-		//b2FixtureDef fixtureDef;
-		//fixtureDef.shape = &polygonShape;
-		//fixtureDef.isSensor = true;
-
-		//polygonShape.SetAsBox(9, 7, b2Vec2(-10, 35), 20 * DEGTORAD);
-		//b2Fixture* wallFixture = m_groundBody->CreateFixture(&fixtureDef);
-		//wallFixture->SetUserData(new WallFUD(true));
-
-		//polygonShape.SetAsBox(9, 5, b2Vec2(20, 40), -40 * DEGTORAD);
-		//wallFixture = m_groundBody->CreateFixture(&fixtureDef);
-		//wallFixture->SetUserData(new WallFUD(true));
-
 	}
+
 
 	void Keyboard(unsigned char key) {
 		switch (key) {
-		case 'w': m_keyboardState |= UP;    break;
-		case 'a': m_keyboardState |= LEFT;  break;
-		case 's': m_keyboardState |= DOWN;  break;
-		case 'd': m_keyboardState |= RIGHT; break;
+		case 'w': m_keyboardState |= UP;     break;
+		case 'a': m_keyboardState |= LEFT;   break;
+		case 's': m_keyboardState |= DOWN;   break;
+		case 'd': m_keyboardState |= RIGHT;  break;
+		case 'o': m_keyboardState |= RECORD; break;
+
 		default : Test::Keyboard(key);
 		}
 	}
-
 	void KeyboardUp(unsigned char key) {
 		switch (key) {
-		case 'w': m_keyboardState &= ~UP;    break;
-		case 'a': m_keyboardState &= ~LEFT;  break;
-		case 's': m_keyboardState &= ~DOWN;  break;
-		case 'd': m_keyboardState &= ~RIGHT; break;
+		case 'w': m_keyboardState &= ~UP;     break;
+		case 'a': m_keyboardState &= ~LEFT;   break;
+		case 's': m_keyboardState &= ~DOWN;   break;
+		case 'd': m_keyboardState &= ~RIGHT;  break;
+		case 'o': m_keyboardState &= ~RECORD; break;
+
 		default : Test::Keyboard(key);
 		}
 	}
@@ -570,6 +562,11 @@ public:
 	}
 
 	void drawInfo() {
+		// Draw instructions
+		m_debugDraw.DrawString(5, m_textLine,
+			"W,A,S,D to drive in manual mode. Hold 'o' to record training data");
+		m_textLine += 30;
+
 		// Draw feeler values on screen
 		for (int i = 0; i < 5; i++) {
 			m_debugDraw.DrawString(5, m_textLine,
@@ -579,7 +576,7 @@ public:
 		m_textLine += 15;
 
 		// Display crash message if crashed
-		std::vector<CTire*> tires = m_car->getTires();
+		vector<CTire*> tires = m_car->getTires();
 		for (int i = 0; i <= 3; i++)
 			if (tires[i]->m_hasCrashed)
 				m_debugDraw.DrawString(5, m_textLine, "You crashed - you're shit");
@@ -587,11 +584,134 @@ public:
 	}
 
 
+	// Records input and target training data to .csv files.
+	void recordData(int keyboardState) {
+
+		// Draw "RECORDING" text
+		m_textLine += 15;
+		m_debugDraw.DrawString(5, m_textLine, "RECORDING");
+		m_textLine += 15;
+
+		ofstream dataStream;
+
+		// Write training inputs (feeler values)
+		dataStream.open("trainingInputs.csv", ios::app);
+		for (int i = 0; i < 5; i++) {
+			dataStream << m_feelerFractions[i];
+			dataStream << ",";
+		}
+		dataStream << "\n";
+		dataStream.close();
+
+		// Write training targets (key states)
+		dataStream.open("trainingTargets.csv", ios::app);
+
+		if (keyboardState & UP)
+			dataStream << "1";
+		else
+			dataStream << "0";
+		dataStream << ",";
+
+		if (keyboardState & LEFT)
+			dataStream << "1";
+		else
+			dataStream << "0";
+		dataStream << ",";
+
+		if (keyboardState & RIGHT)
+			dataStream << "1";
+		else
+			dataStream << "0";
+		dataStream << ",";
+
+		if (keyboardState & DOWN)
+			dataStream << "1";
+		else
+			dataStream << "0";
+		dataStream << ",";
+
+		dataStream << "\n";
+		dataStream.close();
+
+	}
+
+
+	// Deletes training data files.
+	void deleteData() {
+		remove("trainingInputs.csv");
+		remove("trainingTargets.csv");
+	}
+
+
+	// Returns a string containing the specified line from a file
+	string readLine(string fileName, int line) {
+
+		ifstream file(fileName);
+		string s = "";
+
+		if (file.is_open()) {
+			if (!file.eof()) {
+				// Skip lines
+				for (int i = 1; i < line; i++) {
+					getline(file, s);
+				}
+
+				// get the desired line
+				getline(file, s);
+			}		
+		}
+		return s;
+	}
+
+
+	// Reads a file (output from the neural net) and returns the keyboardState at a given step
+	int getKeyboardStateFromFile(int step) {
+		int keyboardState = 0;
+		
+		// Get line containing key states in string form
+		string fileString;
+		fileString = readLine("trainingTargets2.csv", step);
+
+		// Convert string into keyboardState
+		string u, l, r, d;  // substrings for each key state (up, left, right, down)
+		u = fileString.at(0);
+		l = fileString.at(2);
+		r = fileString.at(4);
+		d = fileString.at(6);
+
+		if (u == "1")
+			keyboardState |= UP;
+		if (l == "1")
+			keyboardState |= LEFT;
+		if (r == "1")
+			keyboardState |= RIGHT;
+		if (d == "1")
+			keyboardState |= DOWN;
+
+		return keyboardState;
+	}
+
+
 	void Step(Settings* settings) {
 
+		m_keyboardState = getKeyboardStateFromFile(m_stepCount);
+
+		// if in automatic mode
+		// while (1) {
+		// step++
+		// getKeyboardStateFromFile(m_stepCount)
+
 		m_car->update(m_keyboardState);
+
 		handleFeelers();
 		drawInfo();
+		
+		if (m_keyboardState & RECORD)
+			recordData(m_keyboardState);
+
+
+		//readLine("trainingInputs.csv", 26);
+
 
 
 		// Run the default physics and rendering
@@ -599,9 +719,11 @@ public:
 
 	}
 
+
 	static Test* Create() {
 		return new CharlieCar;
 	}
+
 
 	~CharlieCar() {
 		if (m_car)	delete m_car;
